@@ -1,19 +1,13 @@
-use std::future::Future;
-use std::pin::Pin;
-
-use crate::{Complete, ModelRequest};
 use reqwest::header::HeaderMap;
+use serde::{de::DeserializeOwned, Serialize};
 
 pub mod anthropic;
 
-pub trait LLMProvider: Sized {
-    type Response;
+pub trait Provider: Sized {
+    type Config: Default;
+    type Request: Serialize;
+    type Response: DeserializeOwned;
 
-    fn base_url(&self) -> &str;
-    fn headers(&self) -> HeaderMap;
-
-    fn chat_completion(
-        &self,
-        request: ModelRequest<Complete, Self>,
-    ) -> Pin<Box<dyn Future<Output = Result<Self::Response, Box<dyn std::error::Error>>> + Send + '_>>;
+    fn base_url() -> &'static str;
+    fn headers(api_key: &str) -> HeaderMap;
 }

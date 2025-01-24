@@ -1,138 +1,97 @@
-use std::{future::Future, marker::PhantomData, pin::Pin};
+use crate::{Message, Model};
 
-use crate::{Complete, Incomplete, Message, Model, ModelRequest, TokenUsage};
+use super::Provider;
+use reqwest::header::{HeaderMap, HeaderValue};
+use serde::{Deserialize, Serialize};
 
-use super::LLMProvider;
-use reqwest::{
-    header::{HeaderMap, HeaderValue},
-    Client as HttpClient,
-};
-use serde::Deserialize;
+pub struct Anthropic;
 
+#[derive(Default)]
 pub struct AnthropicConfig;
 
-pub struct AnthropicClient {
-    http_client: HttpClient,
-    api_key: String,
-    base_url: String,
+#[derive(Serialize)]
+pub struct AnthropicRequest {
+    pub model: String,
+    pub max_tokens: i32,
+    pub messages: Vec<Message>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub temperature: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub system: Option<String>,
 }
 
-impl AnthropicClient {
-    pub fn new(api_key: impl Into<String>) -> Self {
-        Self {
-            http_client: HttpClient::new(),
-            api_key: api_key.into(),
-            base_url: "https://api.anthropic.com/v1/messages".to_string(),
+impl From<Model<Anthropic>> for AnthropicRequest {
+    fn from(model: Model<Anthropic>) -> Self {
+        AnthropicRequest {
+            model: model.model,
+            max_tokens: model.max_tokens,
+            system: None,
+            messages: Vec::new(),
+            temperature: None,
         }
     }
-
-    pub async fn chat_completion(
-        &self,
-        request: ModelRequest<Complete, AnthropicConfig>,
-    ) -> Result<AnthropicResponse, Box<dyn std::error::Error>> {
-        let response = self
-            .http_client
-            .post(&self.base_url)
-            .headers(self.headers())
-            .json(&request)
-            .send()
-            .await?
-            .json()
-            .await?;
-
-        Ok(response)
-    }
 }
 
-impl LLMProvider for AnthropicClient {
-    type Response = AnthropicResponse;
-
-    fn base_url(&self) -> &str {
-        &self.base_url
-    }
-
-    fn headers(&self) -> HeaderMap {
-        let mut headers = HeaderMap::new();
-        headers.insert("x-api-key", HeaderValue::from_str(&self.api_key).unwrap());
-        headers.insert("anthropic-version", HeaderValue::from_static("2023-06-01"));
-        headers.insert("content-type", HeaderValue::from_static("application/json"));
-        headers
-    }
-
-    fn chat_completion(
-        &self,
-        request: ModelRequest<Complete, Self>,
-    ) -> Pin<Box<dyn Future<Output = Result<Self::Response, Box<dyn std::error::Error>>> + Send + '_>>
-    {
-        Box::pin(async move {
-            let response = self
-                .http_client
-                .post(self.base_url())
-                .headers(self.headers())
-                .json(&request)
-                .send()
-                .await?
-                .json()
-                .await?;
-
-            Ok(response)
-        })
-    }
+#[derive(Deserialize)]
+pub struct AnthropicResponse {
+    pub content: Vec<Content>,
+    pub id: String,
+    pub model: String,
+    pub role: String,
+    pub stop_reason: String,
+    pub stop_sequence: Option<String>,
+    #[serde(rename = "type")]
+    pub response_type: String,
+    pub usage: Usage,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Content {
     pub text: String,
+    #[serde(rename = "type")]
+    pub message_type: String,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct AnthropicResponse {
-    pub content: Vec<Content>,
-    pub usage: TokenUsage,
+#[derive(Deserialize)]
+pub struct Usage {
+    pub input_tokens: u32,
+    pub output_tokens: u32,
 }
 
-impl AnthropicResponse {
-    pub fn get_text(&self) -> Option<&str> {
-        self.content.first().map(|c| c.text.as_str())
+impl Provider for Anthropic {
+    type Config = AnthropicConfig;
+    type Request = AnthropicRequest;
+    type Response = AnthropicResponse;
+
+    fn base_url() -> &'static str {
+        "https://api.anthropic.com/v1/messages"
+    }
+
+    fn headers(api_key: &str) -> HeaderMap {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "x-api-key",
+            HeaderValue::from_str(api_key).expect("Invalid API key format"),
+        );
+        headers.insert("anthropic-version", HeaderValue::from_static("2023-06-01"));
+        headers.insert("content-type", HeaderValue::from_static("application/json"));
+        headers
     }
 }
 
-impl Model<Incomplete, AnthropicConfig> {
-    pub fn anthropic(model: impl Into<String>, max_tokens: i32) -> Self {
-        Self {
-            model: model.into(),
-            max_tokens,
-            system_prompt: None,
-            _state: PhantomData,
-            _provider: PhantomData,
-        }
-    }
+pub trait AnthropicRequestBuilder {
+    fn system_prompt(self, prompt: impl Into<String>) -> Self;
+    fn message(self, role: impl Into<String>, content: impl Into<String>) -> Self;
+    fn temperature(self, temp: f32) -> Self;
+}
 
-    pub fn system_prompt(mut self, prompt: impl Into<String>) -> Self {
-        self.system_prompt = Some(prompt.into());
+impl AnthropicRequestBuilder for AnthropicRequest {
+    fn system_prompt(mut self, prompt: impl Into<String>) -> Self {
+        self.system = Some(prompt.into());
         self
     }
 
-    pub fn request(&self) -> ModelRequest<Incomplete, AnthropicConfig> {
-        ModelRequest {
-            model: self.model.clone(),
-            max_tokens: self.max_tokens,
-            messages: Vec::new(),
-            system: self.system_prompt.clone(),
-            temperature: None,
-            _state: PhantomData,
-            _provider: PhantomData,
-        }
-    }
-}
-
-impl ModelRequest<Incomplete, AnthropicConfig> {
-    pub fn temperature(mut self, temp: f32) -> Self {
-        self.temperature = Some(temp);
-        self
-    }
-
-    pub fn message(mut self, role: impl Into<String>, content: impl Into<String>) -> Self {
+    fn message(mut self, role: impl Into<String>, content: impl Into<String>) -> Self {
         self.messages.push(Message {
             role: role.into(),
             content: content.into(),
@@ -140,19 +99,8 @@ impl ModelRequest<Incomplete, AnthropicConfig> {
         self
     }
 
-    pub fn build(self) -> Result<ModelRequest<Complete, AnthropicConfig>, &'static str> {
-        if self.messages.is_empty() {
-            return Err("messages are required");
-        }
-
-        Ok(ModelRequest {
-            model: self.model,
-            max_tokens: self.max_tokens,
-            messages: self.messages,
-            system: self.system,
-            temperature: self.temperature,
-            _state: PhantomData,
-            _provider: PhantomData,
-        })
+    fn temperature(mut self, temp: f32) -> Self {
+        self.temperature = Some(temp);
+        self
     }
 }

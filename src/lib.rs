@@ -1,11 +1,10 @@
-use serde::{Deserialize, Serialize};
-use std::marker::PhantomData;
-
+pub mod client;
 pub mod providers;
 
-// Core types
-pub struct Incomplete;
-pub struct Complete;
+use std::marker::PhantomData;
+
+use providers::Provider;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Message {
@@ -14,36 +13,28 @@ pub struct Message {
 }
 
 #[derive(Clone)]
-pub struct Model<S, P> {
+pub struct Model<P: Provider> {
     pub model: String,
     pub max_tokens: i32,
-    pub system_prompt: Option<String>,
-    pub _state: PhantomData<S>,
-    pub _provider: PhantomData<P>,
+    pub config: P::Config,
+    _provider: PhantomData<P>,
 }
 
-#[derive(Serialize)]
-pub struct ModelRequest<S, P> {
-    pub model: String,
-    pub max_tokens: i32,
-    pub messages: Vec<Message>,
+impl<P: Provider> Model<P>
+where
+    P::Config: Default,
+    P::Request: From<Model<P>>,
+{
+    pub fn new(model: impl Into<String>, max_tokens: i32) -> Self {
+        Self {
+            model: model.into(),
+            max_tokens,
+            config: P::Config::default(),
+            _provider: PhantomData,
+        }
+    }
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub temperature: Option<f32>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub system: Option<String>,
-
-    #[serde(skip)]
-    pub _state: PhantomData<S>,
-    #[serde(skip)]
-    pub _provider: PhantomData<P>,
+    pub fn build_request(self) -> P::Request {
+        self.into()
+    }
 }
-
-#[derive(Debug, Deserialize)]
-pub struct TokenUsage {
-    pub input_tokens: i64,
-    pub output_tokens: i64,
-}
-
-pub use providers::anthropic::{AnthropicClient, AnthropicConfig};
