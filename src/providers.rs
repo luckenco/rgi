@@ -2,6 +2,7 @@ use reqwest::header::HeaderMap;
 use serde::{de::DeserializeOwned, Serialize};
 
 pub mod anthropic;
+pub mod deepseek;
 
 pub trait Provider: Sized {
     type Config: Default;

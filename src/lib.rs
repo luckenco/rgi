@@ -15,7 +15,7 @@ pub struct Message {
 #[derive(Clone)]
 pub struct Model<P: Provider> {
     pub model: String,
-    pub max_tokens: i32,
+    pub max_tokens: u32,
     pub config: P::Config,
     _provider: PhantomData<P>,
 }
@@ -25,7 +25,7 @@ where
     P::Config: Default,
     P::Request: From<Model<P>>,
 {
-    pub fn new(model: impl Into<String>, max_tokens: i32) -> Self {
+    pub fn new(model: impl Into<String>, max_tokens: u32) -> Self {
         Self {
             model: model.into(),
             max_tokens,

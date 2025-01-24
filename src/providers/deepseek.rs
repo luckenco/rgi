@@ -1,157 +1,121 @@
-use std::marker::PhantomData;
+use reqwest::header::{HeaderMap, HeaderValue};
+use serde::{Deserialize, Serialize};
 
-use crate::{Complete, Incomplete, Message, Model, ModelRequest, TokenUsage};
+use crate::Model;
 
-use super::LLMProvider;
-use reqwest::{
-    header::{HeaderMap, HeaderValue},
-    Client as HttpClient,
-};
-use serde::Deserialize;
+use super::Provider;
 
-pub struct DeepSeekConfig;
+pub struct Deepseek;
 
-pub struct DeepSeekClient {
-    http_client: HttpClient,
-    api_key: String,
-    base_url: String,
+#[derive(Default)]
+pub struct DeepseekConfig;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Role {
+    #[serde(rename = "system")]
+    System,
+    #[serde(rename = "user")]
+    User,
+    #[serde(rename = "assistant")]
+    Assistant,
 }
 
-impl DeepSeekClient {
-    pub fn new(api_key: impl Into<String>) -> Self {
-        Self {
-            http_client: HttpClient::new(),
-            api_key: api_key.into(),
-            base_url: "http://api.deepseek.com".to_string(),
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Message {
+    pub role: Role,
+    pub content: String,
+}
+
+#[derive(Serialize)]
+pub struct DeepSeekRequest {
+    pub model: String,
+    pub messages: Vec<Message>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_tokens: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub temperature: Option<f32>,
+}
+
+impl From<Model<Deepseek>> for DeepSeekRequest {
+    fn from(model: Model<Deepseek>) -> Self {
+        DeepSeekRequest {
+            model: model.model,
+            max_tokens: Some(model.max_tokens),
+            messages: Vec::new(),
+            temperature: None,
         }
     }
-
-    pub async fn chat_completion(
-        &self,
-        request: ModelRequest<Complete, DeepSeekConfig>,
-    ) -> Result<DeepSeekResponse, Box<dyn std::error::Error>> {
-        let response = self
-            .http_client
-            .post(&self.base_url)
-            .headers(self.headers())
-            .json(&request)
-            .send()
-            .await?
-            .json()
-            .await?;
-
-        Ok(response)
-    }
 }
 
-impl LLMProvider for DeepSeekClient {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeepSeekResponse {
+    pub id: String,
+    pub choices: Vec<Choice>,
+    pub created: u64,
+    pub model: String,
+    pub object: String,
+    pub usage: Usage,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Choice {
+    pub finish_reason: String,
+    pub index: u32,
+    pub message: Message,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Usage {
+    pub completion_tokens: u32,
+    pub prompt_tokens: u32,
+    pub total_tokens: u32,
+}
+
+impl Provider for Deepseek {
+    type Config = DeepseekConfig;
+    type Request = DeepSeekRequest;
     type Response = DeepSeekResponse;
 
-    fn base_url(&self) -> &str {
-        &self.base_url
+    fn base_url() -> &'static str {
+        "https://api.deepseek.com/chat/completions"
     }
 
-    fn headers(&self) -> HeaderMap {
+    fn headers(api_key: &str) -> reqwest::header::HeaderMap {
         let mut headers = HeaderMap::new();
         headers.insert(
             "Authorization",
-            HeaderValue::from_str(&format!("Bearer {}", self.api_key)).unwrap(),
+            HeaderValue::from_str(&format!("Bearer {}", api_key)).unwrap(),
         );
-        headers.insert("content-type", HeaderValue::from_static("application/json"));
+        headers.insert("Content-Type", HeaderValue::from_static("application/json"));
         headers
     }
-
-    async fn chat_completion(
-        &self,
-        request: ModelRequest<Complete, Self>,
-    ) -> Result<Self::Response, Box<dyn std::error::Error>> {
-        let response = self
-            .http_client
-            .post(self.base_url())
-            .headers(self.headers())
-            .json(&request)
-            .send()
-            .await?
-            .json()
-            .await?;
-
-        Ok(response)
-    }
 }
 
-#[derive(Debug, Deserialize)]
-pub struct Content {
-    pub text: String,
+pub trait DeepSeekRequestBuilder {
+    fn system_prompt(self, prompt: impl Into<String>) -> Self;
+    fn message(self, role: Role, content: impl Into<String>) -> Self;
+    fn temperature(self, temp: f32) -> Self;
 }
 
-#[derive(Debug, Deserialize)]
-pub struct DeepSeekResponse {
-    pub content: Vec<Content>,
-    pub usage: TokenUsage,
-}
-
-impl DeepSeekResponse {
-    pub fn get_text(&self) -> Option<&str> {
-        self.content.first().map(|c| c.text.as_str())
-    }
-}
-
-impl Model<Incomplete, DeepSeekConfig> {
-    pub fn deepseek(model: impl Into<String>, max_tokens: i32) -> Self {
-        Self {
-            model: model.into(),
-            max_tokens,
-            system_prompt: None,
-            _state: PhantomData,
-            _provider: PhantomData,
-        }
-    }
-
-    pub fn system_prompt(mut self, prompt: impl Into<String>) -> Self {
-        self.system_prompt = Some(prompt.into());
-        self
-    }
-
-    pub fn request(&self) -> ModelRequest<Incomplete, DeepSeekConfig> {
-        ModelRequest {
-            model: self.model.clone(),
-            max_tokens: self.max_tokens,
-            messages: Vec::new(),
-            system: self.system_prompt.clone(),
-            temperature: None,
-            _state: PhantomData,
-            _provider: PhantomData,
-        }
-    }
-}
-
-impl ModelRequest<Incomplete, DeepSeekConfig> {
-    pub fn temperature(mut self, temp: f32) -> Self {
-        self.temperature = Some(temp);
-        self
-    }
-
-    pub fn message(mut self, role: impl Into<String>, content: impl Into<String>) -> Self {
+impl DeepSeekRequestBuilder for DeepSeekRequest {
+    fn system_prompt(mut self, prompt: impl Into<String>) -> Self {
         self.messages.push(Message {
-            role: role.into(),
+            role: Role::System,
+            content: prompt.into(),
+        });
+        self
+    }
+
+    fn message(mut self, role: Role, content: impl Into<String>) -> Self {
+        self.messages.push(Message {
+            role,
             content: content.into(),
         });
         self
     }
 
-    pub fn build(self) -> Result<ModelRequest<Complete, DeepSeekConfig>, &'static str> {
-        if self.messages.is_empty() {
-            return Err("messages are required");
-        }
-
-        Ok(ModelRequest {
-            model: self.model,
-            max_tokens: self.max_tokens,
-            messages: self.messages,
-            system: self.system,
-            temperature: self.temperature,
-            _state: PhantomData,
-            _provider: PhantomData,
-        })
+    fn temperature(mut self, temp: f32) -> Self {
+        self.temperature = Some(temp);
+        self
     }
 }
