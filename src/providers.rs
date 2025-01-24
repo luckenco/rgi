@@ -1,3 +1,6 @@
+use std::future::Future;
+use std::pin::Pin;
+
 use crate::{Complete, ModelRequest};
 use reqwest::header::HeaderMap;
 
@@ -9,9 +12,8 @@ pub trait LLMProvider: Sized {
     fn base_url(&self) -> &str;
     fn headers(&self) -> HeaderMap;
 
-    // TODO: Use a future and pin the return
-    async fn chat_completion(
+    fn chat_completion(
         &self,
         request: ModelRequest<Complete, Self>,
-    ) -> Result<Self::Response, Box<dyn std::error::Error>>;
+    ) -> Pin<Box<dyn Future<Output = Result<Self::Response, Box<dyn std::error::Error>>> + Send + '_>>;
 }

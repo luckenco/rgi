@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{future::Future, marker::PhantomData, pin::Pin};
 
 use crate::{Complete, Incomplete, Message, Model, ModelRequest, TokenUsage};
 
@@ -59,21 +59,24 @@ impl LLMProvider for AnthropicClient {
         headers
     }
 
-    async fn chat_completion(
+    fn chat_completion(
         &self,
         request: ModelRequest<Complete, Self>,
-    ) -> Result<Self::Response, Box<dyn std::error::Error>> {
-        let response = self
-            .http_client
-            .post(self.base_url())
-            .headers(self.headers())
-            .json(&request)
-            .send()
-            .await?
-            .json()
-            .await?;
+    ) -> Pin<Box<dyn Future<Output = Result<Self::Response, Box<dyn std::error::Error>>> + Send + '_>>
+    {
+        Box::pin(async move {
+            let response = self
+                .http_client
+                .post(self.base_url())
+                .headers(self.headers())
+                .json(&request)
+                .send()
+                .await?
+                .json()
+                .await?;
 
-        Ok(response)
+            Ok(response)
+        })
     }
 }
 
