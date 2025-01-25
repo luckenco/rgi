@@ -1,0 +1,78 @@
+#![allow(dead_code)]
+
+// async fn example() {
+//     let pool = deepseek::Pool::new("key", deepseek::Config::default());
+//     // let pool = DeepseekConfig {
+//     //     max_connections: 3,
+//     //     client_builder: reqwest::ClientBuilder,
+//     //     ..Default::default()
+//     // }.connect("key").await;
+//     //
+//     // DeepseekConfig {
+//     //     max_connections: 3,
+//     //     client_builder: reqwest::ClientBuilder,
+//     //     base_url: ""
+//     //     ..Default::default()
+//     // }
+
+//     // let messages = DeepseekMessages::
+//     //
+//     let temp = deepseek::Temperature::try_from(1.0).unwrap();
+
+//     // let temp = deepseek::Temperature::from(TemperaturePreset::Coding);
+//     let temp = deespeek::Temperature::coding();
+//     let temp = deepseek::Temperature::CODING;
+// }
+
+#[derive(Debug, Clone, Copy)]
+struct Temperature(f32);
+
+#[derive(Debug)]
+enum TemperatureError {
+    TooHigh,
+    TooLow,
+}
+
+impl Temperature {
+    const MIN: f32 = 0.0;
+    const MAX: f32 = 1.5;
+
+    const CODING: Self = Self(Self::MIN);
+    const POETRY: Self = Self(Self::MAX);
+
+    const fn new(value: f32) -> Result<Self, TemperatureError> {
+        match value {
+            _ if value < Temperature::MIN => Err(TemperatureError::TooLow),
+            _ if value > Temperature::MAX => Err(TemperatureError::TooHigh),
+            _ => Ok(Self(value)),
+        }
+    }
+}
+
+impl TryFrom<f32> for Temperature {
+    type Error = TemperatureError;
+
+    fn try_from(value: f32) -> Result<Self, Self::Error> {
+        Self::new(value)
+    }
+}
+
+fn test() {
+    let temp = Temperature::new(1.0);
+    let temp3 = Temperature::CODING;
+}
+
+// API
+// struct Temperature;
+// struct Chat;
+// struct Messages;
+// strust Toolset;
+// struct Role;
+// struct Response;
+
+// rgi::deepseek
+
+// lib.rs
+// deepseek.rs
+// deepseek/
+//     <utils>
