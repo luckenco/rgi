@@ -1,4 +1,5 @@
-use model::REASONER;
+use serde::Serialize;
+use serde::{ser::SerializeMap, Serializer};
 use thiserror::Error;
 
 pub mod model {
@@ -21,7 +22,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             base_url: "https://api.deepseek.com",
-            model: REASONER,
+            model: model::REASONER,
         }
     }
 }
@@ -74,6 +75,81 @@ impl TryFrom<f32> for FrequencyPenalty {
     /// Attempts to create FrequencyPenalty from f32 value
     fn try_from(value: f32) -> Result<Self, Self::Error> {
         Self::new(value)
+    }
+}
+
+// Does this make sense or do we want to handle serialization somewhere else?
+#[derive(Debug)]
+pub enum Message {
+    System {
+        content: String,
+        name: Option<String>,
+    },
+    User {
+        content: String,
+        name: Option<String>,
+    },
+    Assistant {
+        content: Option<String>,
+        name: Option<String>,
+        prefix: Option<bool>,
+        reasoning_content: Option<String>,
+    },
+    Tool {
+        content: String,
+        tool_call_id: String,
+    },
+}
+
+impl Serialize for Message {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map = serializer.serialize_map(None)?;
+        match self {
+            Message::System { content, name } => {
+                map.serialize_entry("role", "system")?;
+                map.serialize_entry("content", content)?;
+                if let Some(name) = name {
+                    map.serialize_entry("name", name)?;
+                }
+            }
+            Message::User { content, name } => {
+                map.serialize_entry("role", "user")?;
+                map.serialize_entry("content", content)?;
+                if let Some(name) = name {
+                    map.serialize_entry("name", name)?;
+                }
+            }
+            Message::Assistant {
+                content,
+                name,
+                prefix,
+                reasoning_content,
+            } => {
+                map.serialize_entry("role", "assistant")?;
+                map.serialize_entry("content", content)?;
+                if let Some(name) = name {
+                    map.serialize_entry("name", name)?;
+                }
+                if let Some(prefix) = prefix {
+                    map.serialize_entry("prefix", prefix)?;
+                }
+                if let Some(reasoning_content) = reasoning_content {
+                    map.serialize_entry("reasoning_content", reasoning_content)?;
+                }
+            }
+            Message::Tool {
+                content,
+                tool_call_id,
+            } => {
+                map.serialize_entry("role", "tool")?;
+                map.serialize_entry("content", content)?;
+                map.serialize_entry("tool_call_id", tool_call_id)?;
+            }
+        }
+        map.end()
     }
 }
 

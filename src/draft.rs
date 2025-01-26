@@ -75,6 +75,7 @@ fn test() {
 // struct Messages;
 // strust Toolset;
 // struct Role;
+// struct Request
 // struct Response;
 
 // rgi::deepseek
