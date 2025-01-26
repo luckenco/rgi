@@ -24,7 +24,7 @@
 //     let temp = deepseek::Temperature::CODING;
 // }
 
-use crate::deepseek;
+use crate::deepseek::{self, ToolChoiceMode};
 
 #[derive(Debug, Clone, Copy)]
 struct Temperature(f32);
@@ -68,6 +68,9 @@ fn test() {
         base_url: "https://openrouter.ai/api/v1",
         ..Default::default()
     };
+
+    let choice = deepseek::ToolChoice::new(ToolChoiceMode::Auto);
+    let choice1 = deepseek::ToolChoice::new("tool_name".to_string());
 }
 
 // API

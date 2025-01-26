@@ -1,4 +1,5 @@
-use model::REASONER;
+use serde::{ser::SerializeMap, Serializer};
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 pub mod model {
@@ -185,16 +186,58 @@ impl TopP {
 impl TryFrom<f32> for TopP {
     type Error = TopPError;
 
-    fn try_from(top_p: f32) -> Result<Self, Self::Error> {
-        Self::new(top_p)
+    fn try_from(value: f32) -> Result<Self, Self::Error> {
+        Self::new(value)
     }
 }
 
-// TODO: tools
-// Introduce function calling
+#[derive(Serialize)]
+pub enum ToolChoice {
+    Mode(ToolChoiceMode),
+    Tool(ToolCall),
+}
 
-// TODO: tool_choice
-// Use serde annotations on the enum or impl From<_> ?
+impl ToolChoice {
+    pub fn new<T: Into<Self>>(arg: T) -> Self {
+        arg.into()
+    }
+}
+
+impl From<ToolChoiceMode> for ToolChoice {
+    fn from(mode: ToolChoiceMode) -> Self {
+        ToolChoice::Mode(mode)
+    }
+}
+
+impl From<String> for ToolChoice {
+    fn from(name: String) -> Self {
+        ToolChoice::Tool(ToolCall {
+            type_: "function",
+            function: FunctionName { name },
+        })
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct ToolCall {
+    #[serde(rename = "type")]
+    type_: &'static str,
+    function: FunctionName,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(transparent)]
+pub struct FunctionName {
+    pub name: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ToolChoiceMode {
+    None,
+    Auto,
+    Required,
+}
 
 // TODO: logprobs
 
