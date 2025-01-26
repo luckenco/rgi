@@ -61,6 +61,11 @@ impl FrequencyPenalty {
             _ => Ok(Self(value)),
         }
     }
+
+    /// Returns the inner f32 value
+    pub const fn get(&self) -> f32 {
+        self.0
+    }
 }
 
 impl TryFrom<f32> for FrequencyPenalty {
@@ -128,6 +133,11 @@ impl Temperature {
             _ => Ok(Self(temperature)),
         }
     }
+
+    /// Returns the inner f32 value
+    pub const fn get(&self) -> f32 {
+        self.0
+    }
 }
 
 impl TryFrom<f32> for Temperature {
@@ -165,6 +175,11 @@ impl TopP {
             _ => Ok(Self(top_p)),
         }
     }
+
+    /// Returns the inner f32 value
+    pub const fn get(&self) -> f32 {
+        self.0
+    }
 }
 
 impl TryFrom<f32> for TopP {
@@ -187,14 +202,14 @@ impl TryFrom<f32> for TopP {
 ///
 /// ! `logprobs` must be `true` to use this parameter !
 ///
-/// Number between 0.0 and 20.0.
+/// Number between 0 and 20.
 ///
 /// # Examples
 /// ```
 /// # use crate::TopLogProbs;
-/// let probs = TopLogProbs::new(5.0).unwrap();
-/// let too_high = TopLogProbs::new(21.0); // Returns Err(TopLogProbsError::TooHigh)
-/// let too_low = TopLogProbs::new(-1.0);  // Returns Err(TopLogProbsError::TooLow)
+/// let probs = TopLogProbs::new(5).unwrap();
+/// let too_high = TopLogProbs::new(21); // Returns Err(TopLogProbsError::TooHigh)
+/// let too_low = TopLogProbs::new(-1);  // Returns Err(TopLogProbsError::TooLow)
 /// ```
 #[derive(Debug, Clone, Copy)]
 pub struct TopLogProbs(i32);
@@ -214,14 +229,19 @@ impl TopLogProbs {
     /// Creates a new TopLogProbs.
     ///
     /// # Errors
-    /// Returns `TopLogProbsError::TooLow` if value is less than 0.0
-    /// Returns `TopLogProbsError::TooHigh` if value is greater than 20.0
+    /// Returns `TopLogProbsError::TooLow` if value is less than 0
+    /// Returns `TopLogProbsError::TooHigh` if value is greater than 20
     pub const fn new(top_logprobs: i32) -> Result<Self, TopLogProbsError> {
         match top_logprobs {
             _ if top_logprobs < TopLogProbs::MIN => Err(TopLogProbsError::TooLow),
             _ if top_logprobs > TopLogProbs::MAX => Err(TopLogProbsError::TooHigh),
             _ => Ok(Self(top_logprobs)),
         }
+    }
+
+    /// Returns the inner i32 value
+    pub const fn get(&self) -> i32 {
+        self.0
     }
 }
 
