@@ -192,7 +192,7 @@ impl TryFrom<f32> for TopP {
 /// let too_low = TopLogProbs::new(-1.0);  // Returns Err(TopLogProbsError::TooLow)
 /// ```
 #[derive(Debug, Clone, Copy)]
-pub struct TopLogProbs(f32);
+pub struct TopLogProbs(i32);
 
 pub enum TopLogProbsError {
     TooLow,
@@ -200,15 +200,15 @@ pub enum TopLogProbsError {
 }
 
 impl TopLogProbs {
-    pub const MIN: f32 = 0.0;
-    pub const MAX: f32 = 20.0;
+    pub const MIN: i32 = 0;
+    pub const MAX: i32 = 20;
 
     /// Creates a new TopLogProbs.
     ///
     /// # Errors
     /// Returns `TopLogProbsError::TooLow` if value is less than 0.0
     /// Returns `TopLogProbsError::TooHigh` if value is greater than 20.0
-    pub const fn new(value: f32) -> Result<Self, TopLogProbsError> {
+    pub const fn new(value: i32) -> Result<Self, TopLogProbsError> {
         match value {
             _ if value < TopLogProbs::MIN => Err(TopLogProbsError::TooLow),
             _ if value > TopLogProbs::MAX => Err(TopLogProbsError::TooHigh),
@@ -217,10 +217,10 @@ impl TopLogProbs {
     }
 }
 
-impl TryFrom<f32> for TopLogProbs {
+impl TryFrom<i32> for TopLogProbs {
     type Error = TopLogProbsError;
 
-    fn try_from(value: f32) -> Result<Self, Self::Error> {
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
         Self::new(value)
     }
 }
