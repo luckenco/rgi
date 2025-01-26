@@ -1,4 +1,5 @@
 use model::REASONER;
+use thiserror::Error;
 
 pub mod model {
     pub const CHAT: &'static str = "deepseek-chat";
@@ -97,10 +98,12 @@ impl TryFrom<f32> for FrequencyPenalty {
 #[derive(Debug, Clone, Copy)]
 pub struct Temperature(f32);
 
-#[derive(Debug)]
+#[derive(Error, Debug, Clone, Copy)]
 pub enum TemperatureError {
-    TooHigh,
+    #[error("temperature < {min} (Temperature::MIN)", min = Temperature::MIN)]
     TooLow,
+    #[error("temperature > {max} (Temperature::MAX)", max = Temperature::MAX)]
+    TooHigh,
 }
 
 impl Temperature {
@@ -118,11 +121,11 @@ impl Temperature {
     /// # Errors
     /// Returns `TemperatureError::TooLow` if value is less than 0.0
     /// Returns `TemperatureError::TooHigh` if value is greater than 2.0
-    pub const fn new(value: f32) -> Result<Self, TemperatureError> {
-        match value {
-            _ if value < Temperature::MIN => Err(TemperatureError::TooLow),
-            _ if value > Temperature::MAX => Err(TemperatureError::TooHigh),
-            _ => Ok(Self(value)),
+    pub const fn new(temperature: f32) -> Result<Self, TemperatureError> {
+        match temperature {
+            _ if temperature < Temperature::MIN => Err(TemperatureError::TooLow),
+            _ if temperature > Temperature::MAX => Err(TemperatureError::TooHigh),
+            _ => Ok(Self(temperature)),
         }
     }
 }
@@ -130,17 +133,19 @@ impl Temperature {
 impl TryFrom<f32> for Temperature {
     type Error = TemperatureError;
 
-    fn try_from(value: f32) -> Result<Self, Self::Error> {
-        Self::new(value)
+    fn try_from(temperature: f32) -> Result<Self, Self::Error> {
+        Self::new(temperature)
     }
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct TopP(f32);
 
-#[derive(Debug)]
+#[derive(Error, Debug, Clone, Copy)]
 pub enum TopPError {
+    #[error("top_p < {min} (TopP::MIN)", min = TopP::MIN)]
     TooLow,
+    #[error("top_p > {max} (TopP::MAX)", max = TopP::MAX)]
     TooHigh,
 }
 
@@ -153,11 +158,11 @@ impl TopP {
     /// # Errors
     /// Returns `TopPError::TooLow` if value is less than 0.0
     /// Returns `TopPError::TooHigh` if value is greater than 1.0
-    pub const fn new(value: f32) -> Result<Self, TopPError> {
-        match value {
-            _ if value < TopP::MIN => Err(TopPError::TooLow),
-            _ if value > TopP::MAX => Err(TopPError::TooHigh),
-            _ => Ok(Self(value)),
+    pub const fn new(top_p: f32) -> Result<Self, TopPError> {
+        match top_p {
+            _ if top_p < TopP::MIN => Err(TopPError::TooLow),
+            _ if top_p > TopP::MAX => Err(TopPError::TooHigh),
+            _ => Ok(Self(top_p)),
         }
     }
 }
@@ -165,8 +170,8 @@ impl TopP {
 impl TryFrom<f32> for TopP {
     type Error = TopPError;
 
-    fn try_from(value: f32) -> Result<Self, Self::Error> {
-        Self::new(value)
+    fn try_from(top_p: f32) -> Result<Self, Self::Error> {
+        Self::new(top_p)
     }
 }
 
@@ -194,8 +199,11 @@ impl TryFrom<f32> for TopP {
 #[derive(Debug, Clone, Copy)]
 pub struct TopLogProbs(i32);
 
+#[derive(Error, Debug, Clone, Copy)]
 pub enum TopLogProbsError {
+    #[error("top_logprobs < {min} (TopLogProbs::MIN)", min = TopLogProbs::MIN)]
     TooLow,
+    #[error("top_logprobs > {max} (TopLogProbs::MAX)", max = TopLogProbs::MAX)]
     TooHigh,
 }
 
@@ -208,11 +216,11 @@ impl TopLogProbs {
     /// # Errors
     /// Returns `TopLogProbsError::TooLow` if value is less than 0.0
     /// Returns `TopLogProbsError::TooHigh` if value is greater than 20.0
-    pub const fn new(value: i32) -> Result<Self, TopLogProbsError> {
-        match value {
-            _ if value < TopLogProbs::MIN => Err(TopLogProbsError::TooLow),
-            _ if value > TopLogProbs::MAX => Err(TopLogProbsError::TooHigh),
-            _ => Ok(Self(value)),
+    pub const fn new(top_logprobs: i32) -> Result<Self, TopLogProbsError> {
+        match top_logprobs {
+            _ if top_logprobs < TopLogProbs::MIN => Err(TopLogProbsError::TooLow),
+            _ if top_logprobs > TopLogProbs::MAX => Err(TopLogProbsError::TooHigh),
+            _ => Ok(Self(top_logprobs)),
         }
     }
 }
@@ -220,7 +228,7 @@ impl TopLogProbs {
 impl TryFrom<i32> for TopLogProbs {
     type Error = TopLogProbsError;
 
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        Self::new(value)
+    fn try_from(top_logprobs: i32) -> Result<Self, Self::Error> {
+        Self::new(top_logprobs)
     }
 }
