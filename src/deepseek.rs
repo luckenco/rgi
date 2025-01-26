@@ -104,8 +104,8 @@ pub enum TemperatureError {
 }
 
 impl Temperature {
-    const MIN: f32 = 0.0;
-    const MAX: f32 = 2.0;
+    pub const MIN: f32 = 0.0;
+    pub const MAX: f32 = 2.0;
 
     pub const CODING: Self = Self(Self::MIN);
     pub const DATA: Self = Self(1.0);
@@ -118,7 +118,7 @@ impl Temperature {
     /// # Errors
     /// Returns `TemperatureError::TooLow` if value is less than 0.0
     /// Returns `TemperatureError::TooHigh` if value is greater than 2.0
-    const fn new(value: f32) -> Result<Self, TemperatureError> {
+    pub const fn new(value: f32) -> Result<Self, TemperatureError> {
         match value {
             _ if value < Temperature::MIN => Err(TemperatureError::TooLow),
             _ if value > Temperature::MAX => Err(TemperatureError::TooHigh),
@@ -145,15 +145,15 @@ pub enum TopPError {
 }
 
 impl TopP {
-    const MIN: f32 = 0.0;
-    const MAX: f32 = 1.0;
+    pub const MIN: f32 = 0.0;
+    pub const MAX: f32 = 1.0;
 
     /// Creates a new TopP.
     ///
     /// # Errors
     /// Returns `TopPError::TooLow` if value is less than 0.0
     /// Returns `TopPError::TooHigh` if value is greater than 1.0
-    const fn new(value: f32) -> Result<Self, TopPError> {
+    pub const fn new(value: f32) -> Result<Self, TopPError> {
         match value {
             _ if value < TopP::MIN => Err(TopPError::TooLow),
             _ if value > TopP::MAX => Err(TopPError::TooHigh),
@@ -200,15 +200,15 @@ pub enum TopLogProbsError {
 }
 
 impl TopLogProbs {
-    const MIN: f32 = 0.0;
-    const MAX: f32 = 20.0;
+    pub const MIN: f32 = 0.0;
+    pub const MAX: f32 = 20.0;
 
     /// Creates a new TopLogProbs.
     ///
     /// # Errors
     /// Returns `TopLogProbsError::TooLow` if value is less than 0.0
     /// Returns `TopLogProbsError::TooHigh` if value is greater than 20.0
-    const fn new(value: f32) -> Result<Self, TopLogProbsError> {
+    pub const fn new(value: f32) -> Result<Self, TopLogProbsError> {
         match value {
             _ if value < TopLogProbs::MIN => Err(TopLogProbsError::TooLow),
             _ if value > TopLogProbs::MAX => Err(TopLogProbsError::TooHigh),
