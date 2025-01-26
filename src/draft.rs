@@ -24,6 +24,8 @@
 //     let temp = deepseek::Temperature::CODING;
 // }
 
+use crate::deepseek;
+
 #[derive(Debug, Clone, Copy)]
 struct Temperature(f32);
 
@@ -60,6 +62,12 @@ impl TryFrom<f32> for Temperature {
 fn test() {
     let temp = Temperature::new(1.0);
     let temp3 = Temperature::CODING;
+
+    let config = deepseek::Config::default();
+    let config2 = deepseek::Config {
+        base_url: "https://openrouter.ai/api/v1",
+        ..Default::default()
+    };
 }
 
 // API

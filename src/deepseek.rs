@@ -1,6 +1,28 @@
+use model::REASONER;
+
 pub mod model {
     pub const CHAT: &'static str = "deepseek-chat";
     pub const REASONER: &'static str = "deepseek-reasoner";
+}
+
+pub struct Config {
+    pub base_url: &'static str,
+    pub model: &'static str,
+}
+
+impl Config {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            base_url: "https://api.deepseek.com",
+            model: REASONER,
+        }
+    }
 }
 
 /// Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
@@ -31,8 +53,7 @@ impl FrequencyPenalty {
     /// # Errors
     /// Returns `FrequencyPenaltyError::TooLow` if value is less than -2.0
     /// Returns `FrequencyPenaltyError::TooHigh` if value is greater than 2.0
-    pub const fn new(value: f32) -> Result<Self, FrequencyPenaltyError> {
-        // ASK: Is it idiomatic to mark this as pub although it's already pub due to its struct being pub?
+    const fn new(value: f32) -> Result<Self, FrequencyPenaltyError> {
         match value {
             _ if value < FrequencyPenalty::MIN => Err(FrequencyPenaltyError::TooLow),
             _ if value > FrequencyPenalty::MAX => Err(FrequencyPenaltyError::TooHigh),
@@ -97,7 +118,7 @@ impl Temperature {
     /// # Errors
     /// Returns `TemperatureError::TooLow` if value is less than 0.0
     /// Returns `TemperatureError::TooHigh` if value is greater than 2.0
-    pub const fn new(value: f32) -> Result<Self, TemperatureError> {
+    const fn new(value: f32) -> Result<Self, TemperatureError> {
         match value {
             _ if value < Temperature::MIN => Err(TemperatureError::TooLow),
             _ if value > Temperature::MAX => Err(TemperatureError::TooHigh),
@@ -132,7 +153,7 @@ impl TopP {
     /// # Errors
     /// Returns `TopPError::TooLow` if value is less than 0.0
     /// Returns `TopPError::TooHigh` if value is greater than 1.0
-    pub const fn new(value: f32) -> Result<Self, TopPError> {
+    const fn new(value: f32) -> Result<Self, TopPError> {
         match value {
             _ if value < TopP::MIN => Err(TopPError::TooLow),
             _ if value > TopP::MAX => Err(TopPError::TooHigh),
@@ -187,7 +208,7 @@ impl TopLogProbs {
     /// # Errors
     /// Returns `TopLogProbsError::TooLow` if value is less than 0.0
     /// Returns `TopLogProbsError::TooHigh` if value is greater than 20.0
-    pub const fn new(value: f32) -> Result<Self, TopLogProbsError> {
+    const fn new(value: f32) -> Result<Self, TopLogProbsError> {
         match value {
             _ if value < TopLogProbs::MIN => Err(TopLogProbsError::TooLow),
             _ if value > TopLogProbs::MAX => Err(TopLogProbsError::TooHigh),
