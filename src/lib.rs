@@ -1,4 +1,5 @@
 pub mod client;
+pub mod deepseek;
 pub mod providers;
 
 mod draft;
