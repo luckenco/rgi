@@ -24,7 +24,7 @@
 //     let temp = deepseek::Temperature::CODING;
 // }
 
-use crate::deepseek::{self, ToolChoiceMode};
+use crate::deepseek::{self, ToolChoice};
 
 #[derive(Debug, Clone, Copy)]
 struct Temperature(f32);
@@ -69,8 +69,9 @@ fn test() {
         ..Default::default()
     };
 
-    let choice = deepseek::ToolChoice::new(ToolChoiceMode::Auto);
-    let choice1 = deepseek::ToolChoice::new("tool_name".to_string());
+    let choice = ToolChoice::AUTO;
+    let test = ToolChoice::FUNCTION("test".to_string());
+    let choice1 = ToolChoice::new("tool_name");
 }
 
 // API

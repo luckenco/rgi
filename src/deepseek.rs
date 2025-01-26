@@ -191,52 +191,52 @@ impl TryFrom<f32> for TopP {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Debug)]
 pub enum ToolChoice {
-    Mode(ToolChoiceMode),
-    Tool(ToolCall),
+    NONE,
+    AUTO,
+    REQUIRED,
+    FUNCTION(String),
 }
 
 impl ToolChoice {
-    pub fn new<T: Into<Self>>(arg: T) -> Self {
-        arg.into()
+    pub fn new(name: impl Into<String>) -> Self {
+        ToolChoice::FUNCTION(name.into())
     }
 }
 
-impl From<ToolChoiceMode> for ToolChoice {
-    fn from(mode: ToolChoiceMode) -> Self {
-        ToolChoice::Mode(mode)
+// Serialization implementation
+impl serde::Serialize for ToolChoice {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            ToolChoice::NONE => serializer.serialize_str("none"),
+            ToolChoice::AUTO => serializer.serialize_str("auto"),
+            ToolChoice::REQUIRED => serializer.serialize_str("required"),
+            ToolChoice::FUNCTION(name) => {
+                #[derive(serde::Serialize)]
+                struct ToolCall<'a> {
+                    #[serde(rename = "type")]
+                    type_: &'static str,
+                    function: FunctionName<'a>,
+                }
+
+                #[derive(serde::Serialize)]
+                #[serde(transparent)]
+                struct FunctionName<'a> {
+                    name: &'a str,
+                }
+
+                ToolCall {
+                    type_: "function",
+                    function: FunctionName { name },
+                }
+                .serialize(serializer)
+            }
+        }
     }
-}
-
-impl From<String> for ToolChoice {
-    fn from(name: String) -> Self {
-        ToolChoice::Tool(ToolCall {
-            type_: "function",
-            function: FunctionName { name },
-        })
-    }
-}
-
-#[derive(Debug, Serialize)]
-pub struct ToolCall {
-    #[serde(rename = "type")]
-    type_: &'static str,
-    function: FunctionName,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(transparent)]
-pub struct FunctionName {
-    pub name: String,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "lowercase")]
-pub enum ToolChoiceMode {
-    None,
-    Auto,
-    Required,
 }
 
 // TODO: logprobs
