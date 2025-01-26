@@ -14,10 +14,10 @@ pub mod model {
 /// let too_low = FrequencyPenalty::new(-3.0);  // Returns Err(FrequencyPenaltyError::TooLow)
 /// ```
 #[derive(Debug, Clone, Copy)]
-struct FrequencyPenalty(f32);
+pub struct FrequencyPenalty(f32);
 
 #[derive(Debug)]
-enum FrequencyPenaltyError {
+pub enum FrequencyPenaltyError {
     TooHigh,
     TooLow,
 }
@@ -31,7 +31,8 @@ impl FrequencyPenalty {
     /// # Errors
     /// Returns `FrequencyPenaltyError::TooLow` if value is less than -2.0
     /// Returns `FrequencyPenaltyError::TooHigh` if value is greater than 2.0
-    const fn new(value: f32) -> Result<Self, FrequencyPenaltyError> {
+    pub const fn new(value: f32) -> Result<Self, FrequencyPenaltyError> {
+        // ASK: Is it idiomatic to mark this as pub although it's already pub due to its struct being pub?
         match value {
             _ if value < FrequencyPenalty::MIN => Err(FrequencyPenaltyError::TooLow),
             _ if value > FrequencyPenalty::MAX => Err(FrequencyPenaltyError::TooHigh),
@@ -73,10 +74,10 @@ impl TryFrom<f32> for FrequencyPenalty {
 /// let poetry = Temperature::POETRY;      // 1.5 for creative poetry
 /// ```
 #[derive(Debug, Clone, Copy)]
-struct Temperature(f32);
+pub struct Temperature(f32);
 
 #[derive(Debug)]
-enum TemperatureError {
+pub enum TemperatureError {
     TooHigh,
     TooLow,
 }
@@ -85,18 +86,18 @@ impl Temperature {
     const MIN: f32 = 0.0;
     const MAX: f32 = 2.0;
 
-    const CODING: Self = Self(Self::MIN);
-    const DATA: Self = Self(1.0);
-    const CONVERSATION: Self = Self(1.3);
-    const TRANSLATION: Self = Self(1.3);
-    const POETRY: Self = Self(Self::MAX);
+    pub const CODING: Self = Self(Self::MIN);
+    pub const DATA: Self = Self(1.0);
+    pub const CONVERSATION: Self = Self(1.3);
+    pub const TRANSLATION: Self = Self(1.3);
+    pub const POETRY: Self = Self(Self::MAX);
 
     /// Creates a new Temperature.
     ///
     /// # Errors
     /// Returns `TemperatureError::TooLow` if value is less than 0.0
     /// Returns `TemperatureError::TooHigh` if value is greater than 2.0
-    const fn new(value: f32) -> Result<Self, TemperatureError> {
+    pub const fn new(value: f32) -> Result<Self, TemperatureError> {
         match value {
             _ if value < Temperature::MIN => Err(TemperatureError::TooLow),
             _ if value > Temperature::MAX => Err(TemperatureError::TooHigh),
@@ -107,6 +108,96 @@ impl Temperature {
 
 impl TryFrom<f32> for Temperature {
     type Error = TemperatureError;
+
+    fn try_from(value: f32) -> Result<Self, Self::Error> {
+        Self::new(value)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct TopP(f32);
+
+#[derive(Debug)]
+pub enum TopPError {
+    TooLow,
+    TooHigh,
+}
+
+impl TopP {
+    const MIN: f32 = 0.0;
+    const MAX: f32 = 1.0;
+
+    /// Creates a new TopP.
+    ///
+    /// # Errors
+    /// Returns `TopPError::TooLow` if value is less than 0.0
+    /// Returns `TopPError::TooHigh` if value is greater than 1.0
+    pub const fn new(value: f32) -> Result<Self, TopPError> {
+        match value {
+            _ if value < TopP::MIN => Err(TopPError::TooLow),
+            _ if value > TopP::MAX => Err(TopPError::TooHigh),
+            _ => Ok(Self(value)),
+        }
+    }
+}
+
+impl TryFrom<f32> for TopP {
+    type Error = TopPError;
+
+    fn try_from(value: f32) -> Result<Self, Self::Error> {
+        Self::new(value)
+    }
+}
+
+// TODO: tools
+// Introduce function calling
+
+// TODO: tool_choice
+// Use serde annotations on the enum or impl From<_> ?
+
+// TODO: logprobs
+
+/// Number of most likely tokens to return at each token position, each with an associated log probability.
+///
+/// ! `logprobs` must be `true` to use this parameter !
+///
+/// Number between 0.0 and 20.0.
+///
+/// # Examples
+/// ```
+/// # use crate::TopLogProbs;
+/// let probs = TopLogProbs::new(5.0).unwrap();
+/// let too_high = TopLogProbs::new(21.0); // Returns Err(TopLogProbsError::TooHigh)
+/// let too_low = TopLogProbs::new(-1.0);  // Returns Err(TopLogProbsError::TooLow)
+/// ```
+#[derive(Debug, Clone, Copy)]
+pub struct TopLogProbs(f32);
+
+pub enum TopLogProbsError {
+    TooLow,
+    TooHigh,
+}
+
+impl TopLogProbs {
+    const MIN: f32 = 0.0;
+    const MAX: f32 = 20.0;
+
+    /// Creates a new TopLogProbs.
+    ///
+    /// # Errors
+    /// Returns `TopLogProbsError::TooLow` if value is less than 0.0
+    /// Returns `TopLogProbsError::TooHigh` if value is greater than 20.0
+    pub const fn new(value: f32) -> Result<Self, TopLogProbsError> {
+        match value {
+            _ if value < TopLogProbs::MIN => Err(TopLogProbsError::TooLow),
+            _ if value > TopLogProbs::MAX => Err(TopLogProbsError::TooHigh),
+            _ => Ok(Self(value)),
+        }
+    }
+}
+
+impl TryFrom<f32> for TopLogProbs {
+    type Error = TopLogProbsError;
 
     fn try_from(value: f32) -> Result<Self, Self::Error> {
         Self::new(value)

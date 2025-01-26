@@ -63,7 +63,6 @@ fn test() {
 }
 
 // API
-// struct Temperature;
 // struct Chat;
 // struct Messages;
 // strust Toolset;
@@ -71,8 +70,3 @@ fn test() {
 // struct Response;
 
 // rgi::deepseek
-
-// lib.rs
-// deepseek.rs
-// deepseek/
-//     <utils>
