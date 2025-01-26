@@ -69,9 +69,8 @@ fn test() {
         ..Default::default()
     };
 
-    let choice = ToolChoice::AUTO;
-    let test = ToolChoice::FUNCTION("test".to_string());
-    let choice1 = ToolChoice::new("tool_name");
+    let choice = ToolChoice::Auto;
+    let test = ToolChoice::Function("test".to_string());
 }
 
 // API

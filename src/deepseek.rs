@@ -193,16 +193,10 @@ impl TryFrom<f32> for TopP {
 
 #[derive(Debug)]
 pub enum ToolChoice {
-    NONE,
-    AUTO,
-    REQUIRED,
-    FUNCTION(String),
-}
-
-impl ToolChoice {
-    pub fn new(name: impl Into<String>) -> Self {
-        ToolChoice::FUNCTION(name.into())
-    }
+    None,
+    Auto,
+    Required,
+    Function(String),
 }
 
 // Serialization implementation
@@ -212,10 +206,10 @@ impl serde::Serialize for ToolChoice {
         S: serde::Serializer,
     {
         match self {
-            ToolChoice::NONE => serializer.serialize_str("none"),
-            ToolChoice::AUTO => serializer.serialize_str("auto"),
-            ToolChoice::REQUIRED => serializer.serialize_str("required"),
-            ToolChoice::FUNCTION(name) => {
+            ToolChoice::None => serializer.serialize_str("none"),
+            ToolChoice::Auto => serializer.serialize_str("auto"),
+            ToolChoice::Required => serializer.serialize_str("required"),
+            ToolChoice::Function(name) => {
                 #[derive(serde::Serialize)]
                 struct ToolCall<'a> {
                     #[serde(rename = "type")]
