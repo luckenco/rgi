@@ -79,11 +79,11 @@ pub enum ToolType {
 
 #[derive(Debug, Deserialize)]
 pub struct Usage {
-    pub completion_tokens: u32,
-    pub prompt_tokens: u32,
-    pub prompt_cache_hit_tokens: u32,
-    pub prompt_cache_miss_tokens: u32,
-    pub total_tokens: u32,
+    pub completion_tokens: Option<u32>,
+    pub prompt_tokens: Option<u32>,
+    pub prompt_cache_hit_tokens: Option<u32>,
+    pub prompt_cache_miss_tokens: Option<u32>,
+    pub total_tokens: Option<u32>,
     // This field is mentioned in the docs but absent in the actual API response.
     // Instead of pub_token_details there is prompt_tokens_details
     // pub completion_token_details: CompletionTokenDetails,
@@ -97,16 +97,16 @@ pub struct Usage {
 #[derive(Debug, Deserialize)]
 pub struct Chunk {
     pub id: String,
-    pub choices: Vec<Choice>,
+    pub choices: Vec<StreamChoice>,
     pub created: u32,
     pub model: String,
-    pub system_fingerprint: String,
+    pub system_fingerprint: Option<String>,
     pub object: ResponseObject,
-    pub usage: Usage,
+    pub usage: Option<Usage>,
 }
-
 #[derive(Debug, Deserialize)]
 pub struct StreamChoice {
+    pub delta: Delta,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub finish_reason: Option<FinishReason>,
     pub index: u32,

@@ -45,8 +45,8 @@ impl Chat {
     pub fn default() -> Self {
         Self {
             messages: Vec::new(),
-            model: String::from("deepseek-reasoner"),
-            max_tokens: Some(MaxTokens::default()),
+            model: String::from("deepseek/deepseek-r1-distill-llama-70b"),
+            max_tokens: None,
             stream: Some(false),
         }
     }
