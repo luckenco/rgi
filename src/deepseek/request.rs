@@ -1,9 +1,9 @@
-///! Slow and complicated serialization.
-///!
-///! A mix of both values being checked for being in range and still enabling
-///! invalid states to be represented e.g. logprobs: false and top_logbrobs: Some(..).
-///!
-///! Fortunately, we aren't [redacted] enough to be unaware of this -> this package will be rewritten, once we are sure the API works how we want it to work.
+//! Slow and complicated serialization.
+//!
+//! A mix of both values being checked for being in range and still enabling
+//! invalid states to be represented e.g. logprobs: false and top_logbrobs: Some(..).
+//!
+//! Fortunately, we aren't [redacted] enough to be unaware of this -> this package will be rewritten, once we are sure the API works how we want it to work.
 use std::collections::HashMap;
 
 use serde::Serialize;
@@ -301,7 +301,7 @@ impl Stop {
 
     pub fn new(stop: Vec<String>) -> Result<Self, StopError> {
         (stop.len() <= Self::MAX_LEN)
-            .then(|| Self(stop))
+            .then_some(Self(stop))
             .ok_or(StopError::TooManyStops)
     }
 

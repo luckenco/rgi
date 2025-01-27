@@ -1,73 +1,52 @@
-use std::{collections::HashMap, env};
+use std::env;
 
-use rgi::deepseek::request::{
-    Chat, FrequencyPenalty, FunctionParameters, Message, Parameter, ResponseFormat, Stop,
-    StreamOptions, Temperature, Tool, ToolChoice, TopLogProbs, TopP,
+use rgi::deepseek::{
+    self,
+    request::{Chat, Message, Temperature},
 };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    dotenv::dotenv().ok();
+
+    let client = deepseek::Client::new(
+        &env::var("DEEPSEEK_KEY").expect("Missing DEEPSEEK_KEY"),
+        deepseek::Config::default(),
+    );
+
     let messages = vec![
         Message::System {
             content: String::from("You are a helpful assistant."),
             name: None,
         },
         Message::User {
-            content: String::from("What's the weather like in Boston?"),
+            content: String::from("What's your favorite kind of synthetic data?"),
             name: None,
         },
     ];
 
-    // Create a weather tool function
-    let weather_tool = Tool::Function {
-        description: String::from("Get the current weather in a location"),
-        name: String::from("weather_get"),
-        parameters: FunctionParameters::Object {
-            properties: {
-                let mut props = HashMap::new();
-                props.insert(
-                    String::from("location"),
-                    Parameter {
-                        type_: String::from("string"),
-                        description: String::from("The city and state, e.g. San Francisco, CA"),
-                    },
-                );
-                props.insert(
-                    String::from("unit"),
-                    Parameter {
-                        type_: String::from("string"),
-                        description: String::from("Temperature unit: 'celsius' or 'fahrenheit'"),
-                    },
-                );
-                props
-            },
-            required: vec![String::from("location")],
-        },
-    };
-
     // Build the request
-    let request = Chat {
+    let chat = Chat {
         messages,
-        model: String::from("deepseek-7b"),
-        frequency_penalty: Some(FrequencyPenalty::new(0.5).unwrap()),
+        model: String::from("deepseek-chat"),
+        frequency_penalty: None,
         max_tokens: None,
         presence_penalty: None,
-        response_format: Some(ResponseFormat::JsonObject),
-        stop: Some(Stop::new(vec!["</think>".into()]).unwrap()),
+        response_format: None,
+        stop: None,
         stream: Some(false),
-        stream_options: Some(StreamOptions {
-            include_usage: Some(true),
-        }),
+        stream_options: None,
         temperature: Some(Temperature::CONVERSATION),
-        top_p: Some(TopP::default()),
-        tools: Some(vec![weather_tool]),
-        tool_choice: Some(ToolChoice::Function("weather_get".to_string())),
-        logprobs: Some(true),
-        top_logprobs: Some(TopLogProbs::new(0).unwrap()),
+        top_p: None,
+        tools: None,
+        tool_choice: None,
+        logprobs: None,
+        top_logprobs: None,
     };
 
-    // Serialize and print
-    println!("{}", serde_json::to_string_pretty(&request).unwrap());
+    let response = client.complete(chat).await?;
+
+    println!("{:#?}", response);
 
     Ok(())
 }
