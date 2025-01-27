@@ -1,12 +1,13 @@
 use reqwest::{header, Client as HttpClient};
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
+use serde_json::json;
 use std::time::Duration;
 
-pub mod completions;
+pub mod completion;
 pub mod request;
 
-pub const MODEL: &'static str = "deepseek-reasoner";
+pub const MODEL: &str = "deepseek-reasoner";
 
 pub struct Config {
     pub base_url: &'static str,
@@ -35,6 +36,7 @@ impl Default for Config {
 
 pub struct Client {
     pub inner: ClientWithMiddleware,
+    config: Config,
 }
 
 impl Client {
@@ -50,7 +52,7 @@ impl Client {
             .timeout(config.connection_timeout)
             .default_headers(headers)
             .build()
-            .expect("Failed to create HTTP client");
+            .unwrap();
 
         let retry_policy = ExponentialBackoff::builder().build_with_max_retries(config.max_retries);
 
@@ -60,6 +62,27 @@ impl Client {
 
         Self {
             inner: retry_client,
+            config,
         }
+    }
+
+    pub async fn complete(
+        &self,
+        request: request::Chat,
+    ) -> Result<completion::Object, Box<dyn std::error::Error>> {
+        let request_url = format!("{}/chat/completions", self.config.base_url);
+
+        let body = json!(request);
+
+        let response = self
+            .inner
+            .post(request_url)
+            .body(body.to_string())
+            .send()
+            .await?
+            .json::<completion::Object>()
+            .await?;
+
+        Ok(response)
     }
 }
