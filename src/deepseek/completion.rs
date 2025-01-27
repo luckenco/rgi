@@ -59,6 +59,8 @@ pub enum ResponseObject {
     #[default]
     #[serde(rename = "chat.completion")]
     ChatCompletion,
+    #[serde(rename = "chat.completion.chunk")]
+    ChatCompletionChunk,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -92,5 +94,30 @@ pub struct Usage {
 //     pub reasoning_tokens: u32,
 // }
 
-// TODO: Implement streaming response
-pub struct Chunk {}
+#[derive(Debug, Deserialize)]
+pub struct Chunk {
+    pub id: String,
+    pub choices: Vec<Choice>,
+    pub created: u32,
+    pub model: String,
+    pub system_fingerprint: String,
+    pub object: ResponseObject,
+    pub usage: Usage,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct StreamChoice {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub finish_reason: Option<FinishReason>,
+    pub index: u32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Delta {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reasoning_content: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub role: Option<Role>,
+}
