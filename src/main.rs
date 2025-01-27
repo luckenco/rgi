@@ -2,7 +2,7 @@ use std::env;
 
 use rgi::deepseek::{
     self,
-    request::{Chat, Message, Temperature},
+    request::{Chat, MaxTokens, Message},
 };
 
 #[tokio::main]
@@ -28,20 +28,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Build the request
     let chat = Chat {
         messages,
-        model: String::from("deepseek-chat"),
-        frequency_penalty: None,
-        max_tokens: None,
-        presence_penalty: None,
-        response_format: None,
+        model: String::from("deepseek-reasoner"),
+        max_tokens: Some(MaxTokens::default()),
         stop: None,
         stream: Some(false),
         stream_options: None,
-        temperature: Some(Temperature::CONVERSATION),
-        top_p: None,
-        tools: None,
-        tool_choice: None,
-        logprobs: None,
-        top_logprobs: None,
     };
 
     let response = client.complete(chat).await?;
