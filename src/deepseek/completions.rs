@@ -32,7 +32,8 @@ pub enum FinishReason {
 #[derive(Debug, Deserialize)]
 pub struct ResponseMessage {
     pub content: Option<String>,
-    pub reasoning_content: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reasoning_content: Option<String>,
     // TODO: Implement tool calls
     // pub tool_calls: Vec<ToolCall>,
     pub role: Role,
@@ -81,13 +82,15 @@ pub struct Usage {
     pub prompt_cache_hit_tokens: u32,
     pub prompt_cache_miss_tokens: u32,
     pub total_tokens: u32,
-    pub completion_token_details: CompletionTokenDetails,
+    // This field is mentioned in the docs but absent in the actual API response.
+    // Instead of pub_token_details there is prompt_tokens_details
+    // pub completion_token_details: CompletionTokenDetails,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct CompletionTokenDetails {
-    pub reasoning_tokens: u32,
-}
+// #[derive(Debug, Deserialize)]
+// pub struct CompletionTokenDetails {
+//     pub reasoning_tokens: u32,
+// }
 
 // TODO: Implement streaming response
 pub struct Chunk {}
