@@ -14,31 +14,86 @@ pub struct Chat {
     pub messages: Vec<Message>,
     pub model: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub frequency_penalty: Option<FrequencyPenalty>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_tokens: Option<f32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub presence_penalty: Option<PresencePenalty>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub response_format: Option<ResponseFormat>,
+    // pub frequency_penalty: Option<FrequencyPenalty>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_tokens: Option<MaxTokens>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub presence_penalty: Option<PresencePenalty>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub response_format: Option<ResponseFormat>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stop: Option<Stop>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stream: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stream_options: Option<StreamOptions>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub temperature: Option<Temperature>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub top_p: Option<TopP>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub tools: Option<Vec<Tool>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub tool_choice: Option<ToolChoice>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub logprobs: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub top_logprobs: Option<TopLogProbs>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub temperature: Option<Temperature>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub top_p: Option<TopP>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub tools: Option<Vec<Tool>>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub tool_choice: Option<ToolChoice>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub logprobs: Option<bool>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub top_logprobs: Option<TopLogProbs>,
+}
+
+/// The maximum length of the final response after the CoT output is completed,
+/// defaulting to 4K, with a maximum of 8K. Note that the CoT output can reach up
+/// to 32K tokens, and the parameter to control the CoT length (reasoning_effort)
+/// will be available soon.
+///
+/// # Examples
+/// ```
+/// # use rgi::deepseek::primitives::{MaxTokens, MaxTokenError};
+/// // Valid value creation
+/// let tokens = MaxTokens::new(4000).unwrap();
+/// assert_eq!(tokens.get(), 4000);
+///
+/// // Boundary violations
+/// assert!(matches!(
+///     MaxTokens::new(0),
+///     Err(MaxTokenError::TooLow)
+/// ));
+///
+/// assert!(matches!(
+///     MaxTokens::new(9000),
+///     Err(MaxTokenError::TooHigh)
+/// ));
+/// ```
+#[derive(Debug, Clone, Copy, Serialize)]
+#[serde(transparent)]
+pub struct MaxTokens(u16);
+
+impl MaxTokens {
+    pub const MIN: u16 = 1;
+    pub const MAX: u16 = 8000;
+    pub const DEFAULT: u16 = 4000;
+
+    pub const fn new(value: u16) -> Result<Self, MaxTokenError> {
+        match value {
+            _ if value < MaxTokens::MIN => Err(MaxTokenError::TooLow),
+            _ if value > MaxTokens::MAX => Err(MaxTokenError::TooHigh),
+            _ => Ok(Self(value)),
+        }
+    }
+}
+
+impl Default for MaxTokens {
+    fn default() -> Self {
+        Self(Self::DEFAULT)
+    }
+}
+
+#[derive(Error, Debug, Clone, Copy)]
+pub enum MaxTokenError {
+    #[error("max_tokens < {min} (MaxTokens::MIN)", min = MaxTokens::MIN)]
+    TooLow,
+    #[error("max_tokens > {max} (MaxTokens::MAX)", max = MaxTokens::MAX)]
+    TooHigh,
 }
 
 #[derive(Debug, Serialize, Clone)]
