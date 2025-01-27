@@ -3,6 +3,7 @@ use std::env;
 use rgi::deepseek::{
     self,
     request::{Chat, Message},
+    stream,
 };
 
 #[tokio::main]
@@ -14,26 +15,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         deepseek::Config::default(),
     );
 
-    let messages = vec![
-        Message::System {
-            content: String::from("You are a helpful assistant."),
-            name: None,
-        },
-        Message::User {
-            content: String::from("What's your favorite kind of synthetic data?"),
-            name: None,
-        },
-    ];
+    let messages = vec![Message::User {
+        content: String::from("What's your favorite kind of synthetic data?"),
+        name: None,
+    }];
 
     // Build the request
     let chat = Chat {
         messages,
+        stream: Some(true),
         ..Chat::default()
     };
 
-    let response = client.complete(chat).await?;
-
-    println!("{:#?}", response);
+    stream(&client, chat).await?;
 
     Ok(())
 }
