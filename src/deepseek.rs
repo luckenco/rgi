@@ -1,5 +1,6 @@
 use model::REASONER;
 
+pub mod completions;
 pub mod request;
 
 pub mod model {
