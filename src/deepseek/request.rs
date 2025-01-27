@@ -10,7 +10,7 @@ use serde::Serialize;
 use thiserror::Error;
 
 #[derive(Debug, Clone, Serialize)]
-pub struct Request {
+pub struct Chat {
     pub messages: Vec<Message>,
     pub model: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -106,11 +106,6 @@ impl serde::Serialize for ToolChoice {
         }
     }
 }
-
-// #[derive(Debug, Clone, Serialize)]
-// pub struct FunctionName {
-//     name: String,
-// }
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "role", rename_all = "snake_case")]
@@ -526,3 +521,6 @@ impl TryFrom<i32> for TopLogProbs {
         Self::new(top_logprobs)
     }
 }
+
+// TODO
+pub struct FIMCompletion {}

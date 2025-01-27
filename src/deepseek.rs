@@ -1,7 +1,6 @@
 use model::REASONER;
-use thiserror::Error;
 
-pub mod primitives;
+pub mod request;
 
 pub mod model {
     pub const CHAT: &'static str = "deepseek-chat";

@@ -7,3 +7,8 @@ ideas:
 - make the API really nice, use comptime validation for all requests, prompt templates and so on
 - python introperability? I have no clue how but it needs to be easy to adapt. no one will rewrite everything
 - ...
+
+# Todos
+- [ ] response streaming
+- [ ] Tool calling
+- [ ] Completion.Choice.logprobs
