@@ -29,7 +29,7 @@ impl Default for Config {
             model: MODEL,
             max_retries: 3,
             // Keep in mind that this should be way lower when streaming completion chunks.
-            connection_timeout: Duration::from_secs(30),
+            connection_timeout: Duration::from_secs(300),
         }
     }
 }
@@ -73,6 +73,7 @@ impl Client {
         let request_url = format!("{}/chat/completions", self.config.base_url);
 
         let body = json!(request);
+        println!("Request: {}", body);
 
         let response = self
             .inner
@@ -82,6 +83,8 @@ impl Client {
             .await?
             .json::<completion::Object>()
             .await?;
+
+        println!("Response: {:?}", response);
 
         Ok(response)
     }

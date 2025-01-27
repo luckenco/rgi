@@ -13,20 +13,20 @@ use thiserror::Error;
 pub struct Chat {
     pub messages: Vec<Message>,
     pub model: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    // pub frequency_penalty: Option<FrequencyPenalty>,
     // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub frequency_penalty: Option<FrequencyPenalty>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub max_tokens: Option<MaxTokens>,
     // #[serde(skip_serializing_if = "Option::is_none")]
     // pub presence_penalty: Option<PresencePenalty>,
     // #[serde(skip_serializing_if = "Option::is_none")]
     // pub response_format: Option<ResponseFormat>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub stop: Option<Stop>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub stop: Option<Stop>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stream: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub stream_options: Option<StreamOptions>,
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub stream_options: Option<StreamOptions>,
     // #[serde(skip_serializing_if = "Option::is_none")]
     // pub temperature: Option<Temperature>,
     // #[serde(skip_serializing_if = "Option::is_none")]
@@ -39,6 +39,17 @@ pub struct Chat {
     // pub logprobs: Option<bool>,
     // #[serde(skip_serializing_if = "Option::is_none")]
     // pub top_logprobs: Option<TopLogProbs>,
+}
+
+impl Chat {
+    pub fn default() -> Self {
+        Self {
+            messages: Vec::new(),
+            model: String::from("deepseek-reasoner"),
+            max_tokens: Some(MaxTokens::default()),
+            stream: Some(false),
+        }
+    }
 }
 
 /// The maximum length of the final response after the CoT output is completed,
@@ -350,8 +361,9 @@ impl Stop {
     pub const MAX_LEN: usize = 16;
 
     pub fn new(stop: Vec<String>) -> Result<Self, StopError> {
+        #[allow(clippy::unnecessary_lazy_evaluations)]
         (stop.len() <= Self::MAX_LEN)
-            .then_some(Self(stop))
+            .then(|| Self(stop))
             .ok_or(StopError::TooManyStops)
     }
 
