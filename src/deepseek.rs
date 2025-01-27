@@ -66,26 +66,26 @@ impl Client {
             config,
         }
     }
+}
 
-    pub async fn complete(
-        &self,
-        request: request::Chat,
-    ) -> Result<completion::Object, Box<dyn std::error::Error>> {
-        let request_url = format!("{}/chat/completions", self.config.base_url);
+pub async fn complete(
+    client: &Client,
+    request: request::Chat,
+) -> Result<completion::Object, Box<dyn std::error::Error>> {
+    let request_url = format!("{}/chat/completions", client.config.base_url);
 
-        let body = json!(request);
+    let body = json!(request);
 
-        let response = self
-            .inner
-            .post(request_url)
-            .body(body.to_string())
-            .send()
-            .await?
-            .json::<completion::Object>()
-            .await?;
+    let response = client
+        .inner
+        .post(request_url)
+        .body(body.to_string())
+        .send()
+        .await?
+        .json::<completion::Object>()
+        .await?;
 
-        Ok(response)
-    }
+    Ok(response)
 }
 
 pub async fn stream(
