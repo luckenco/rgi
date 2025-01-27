@@ -279,17 +279,12 @@ impl TryFrom<f32> for PresencePenalty {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum ResponseFormat {
+    #[default]
     Text,
     JsonObject,
-}
-
-impl Default for ResponseFormat {
-    fn default() -> Self {
-        Self::Text
-    }
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
