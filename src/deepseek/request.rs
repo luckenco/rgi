@@ -363,12 +363,12 @@ pub enum Message {
 // impl Stop {
 //     pub const MAX_LEN: usize = 16;
 
-//     pub fn new(stop: Vec<String>) -> Result<Self, StopError> {
-//         #[allow(clippy::unnecessary_lazy_evaluations)]
-//         (stop.len() <= Self::MAX_LEN)
-//             .then(|| Self(stop))
-//             .ok_or(StopError::TooManyStops)
-//     }
+// pub fn new(stop: Vec<String>) -> Result<Self, StopError> {
+//     Some(stop)
+//         .filter(|stop| stop.len() <= Self::MAX_LEN)
+//         .map(Self)
+//         .ok_or(StopError::TooManyStops)
+// }
 
 //     pub fn get(&self) -> &[String] {
 //         &self.0

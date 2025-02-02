@@ -124,7 +124,7 @@ pub async fn stream(
                         return Ok(());
                     }
 
-                    let chunk: Chunk = match serde_json::from_str::<Chunk>(data) {
+                    let chunk = match serde_json::from_str::<Chunk>(data) {
                         Ok(c) => c,
                         Err(e) => {
                             println!("data: {}\n", data);
